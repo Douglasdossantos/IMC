@@ -21,6 +21,9 @@ namespace IMC.Models
         public float Altura { get; set; }
 
         public float IMC { get; set; }
+        public string Categoria { get; set; }
+
+        public int IdCidade { get; set; }
 
     }
 

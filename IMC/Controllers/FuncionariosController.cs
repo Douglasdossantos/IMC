@@ -55,21 +55,13 @@ namespace IMC.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Nome,Sexo,Peso,Altura,IMC")] Funcionario funcionario)
-        {
-            string peso = funcionario.Peso.ToString().Substring(0, funcionario.Peso.ToString().Length - 1);
-            peso += "," + funcionario.Peso.ToString().Substring(funcionario.Peso.ToString().Length - 1, 1);
-            string alto = funcionario.Altura.ToString().Substring(0,1)+"," +funcionario.Altura.ToString().Substring(funcionario.Altura.ToString().Length-2,2 );
-            decimal kg = decimal.Parse(peso);
-            decimal altura = decimal.Parse(alto);
-
-
-
-
-
-            funcionario.IMC = ((float)(kg / (altura * altura)));
+        {                   
 
             if (ModelState.IsValid)
             {
+                AjustarFuncionario(funcionario);
+                funcionario.Categoria = ValidacaoCategoria((int)funcionario.Sexo, (decimal)funcionario.IMC);
+
                 _context.Add(funcionario);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -109,6 +101,9 @@ namespace IMC.Controllers
             {
                 try
                 {
+                    AjustarFuncionario(funcionario);
+                    funcionario.Categoria = ValidacaoCategoria((int)funcionario.Sexo, (decimal)funcionario.IMC);
+
                     _context.Update(funcionario);
                     await _context.SaveChangesAsync();
                 }
@@ -168,6 +163,71 @@ namespace IMC.Controllers
         private bool FuncionarioExists(int id)
         {
           return _context.Funcionarios.Any(e => e.Id == id);
+        }
+
+        private void AjustarFuncionario(Funcionario funcionario)
+        {
+            string peso = funcionario.Peso.ToString().Substring(0, funcionario.Peso.ToString().Length - 1);
+            peso += "," + funcionario.Peso.ToString().Substring(funcionario.Peso.ToString().Length - 1, 1);
+            string alto = funcionario.Altura.ToString().Substring(0, 1) + "," + funcionario.Altura.ToString().Substring(funcionario.Altura.ToString().Length - 2, 2);
+            decimal kg = decimal.Parse(peso);
+            decimal altura = decimal.Parse(alto);
+
+            funcionario.IMC = ((float)(kg / (altura * altura)));
+        }
+
+        private string ValidacaoCategoria(int sexo, decimal imc)
+        {
+                string retorno = string.Empty;
+            if (sexo == (int)Sexo.Feminino)
+            {
+                if (imc <= (decimal)19.1)
+                {
+                    retorno = "Abaixo do peso";
+                }
+                if (imc is > (decimal)19.1 or <= (decimal)25.8)
+                {
+                    retorno = "Peso Ideal";
+                }
+                if (imc is >= (decimal)25.9 or <= (decimal)27.3)
+                {
+                    retorno = "Pouco acima do peso";
+                }
+                if (imc is >= (decimal)27.4 or <= (decimal)32.3)
+                {
+                    retorno = "acima do peso";
+                }
+                if (imc >= (decimal)32.4)
+                {
+                    retorno = "Obesidade";
+                }
+
+            }
+            else if (sexo == (int)Sexo.Masculino)
+            {
+                if (imc <= (decimal)20.7)
+                {
+                    retorno = "Abaixo do peso";
+                }
+                if (imc is > (decimal)20.7 or <= (decimal)26.4)
+                {
+                    retorno = "Peso Ideal";
+                }
+                if (imc is >= (decimal)26.5 or <= (decimal)27.8)
+                {
+                    retorno = "Pouco acima do peso";
+                }
+                if (imc is >= (decimal)27.9 or <= (decimal)31.1)
+                {
+                    retorno = "acima do peso";
+                }
+                if (imc >= (decimal)31.2)
+                {
+                    retorno = "Obesidade";
+                }
+
+            }
+            return retorno;
         }
     }
 }
